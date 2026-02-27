@@ -28,8 +28,8 @@ public class TestCase2 {
         System.out.println("原背景三元概念总数: " + oldConcepts.size());
 
         // 3. 设定新增的三元组 (对应论文 例3，增加属性5，在点 (1, 5, 1) 处)
-        int newX = 1;
-        int newZ = 1;
+        int newX = 3;
+        int newZ = 3;
         System.out.println("\n新增三元组: 包含全新属性，位于对象 " + newX + ", 条件 " + newZ);
 
         long startTime = System.currentTimeMillis();

@@ -76,16 +76,32 @@ public class DynamicTriadicUpdater {
      * 将新增的三元组 (x, y, z) 更新到 Tradic 结构中，生成 K+
      */
     public static void addRelationToTradic(Tradic tradic, int x, int y, int z) {
-        // 更新 objsAndAttrs_Attr: key = (i-1)*y+j
+        // 1. 更新 objsAndAttrs_Attr: key = (i-1)*y+j
         int key1 = (x - 1) * tradic.getY() + y;
+        if (tradic.getObjsAndAttrs_Attr().get(key1) == null) {
+            tradic.getObjsAndAttrs_Attr().put(key1, new BitSet());
+        }
         tradic.getObjsAndAttrs_Attr().get(key1).set(z);
 
-        // 更新 attrsAndCondi_Attr: key = j*z+k+1，实际代码逻辑中是 (j-1)*z+k
+        // 2. 更新 attrsAndCondi_Attr: key = (j-1)*z+k
         int key2 = (y - 1) * tradic.getZ() + z;
+        if (tradic.getAttrsAndCondi_Attr().get(key2) == null) {
+            tradic.getAttrsAndCondi_Attr().put(key2, new BitSet());
+        }
         tradic.getAttrsAndCondi_Attr().get(key2).set(x);
 
-        // 更新 objsAndCondi: key = (i-1)*z+k (如有用到也一并更新)
+        // 3. 【关键修复】：同步更新 attrsAndCondi_Obj (反向映射)
+        // InClose3 极度依赖此 Map，不更新会导致形式概念计算缺失
+        if (tradic.getAttrsAndCondi_Obj().get(x) == null) {
+            tradic.getAttrsAndCondi_Obj().put(x, new BitSet());
+        }
+        tradic.getAttrsAndCondi_Obj().get(x).set(key2);
+
+        // 4. 更新 objsAndCondi_Attr: key = (i-1)*z+k
         int key3 = (x - 1) * tradic.getZ() + z;
+        if (tradic.getObjsAndCondi_Attr().get(key3) == null) {
+            tradic.getObjsAndCondi_Attr().put(key3, new BitSet());
+        }
         tradic.getObjsAndCondi_Attr().get(key3).set(y);
     }
 

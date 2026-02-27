@@ -29,8 +29,8 @@ public class TestCase1 {
 
         // 3. 设定新增的三元组 (对应论文 例2 中新增的 (3, 4, 1))
         int newX = 3;
-        int newY = 4;
-        int newZ = 1;
+        int newY = 1;
+        int newZ = 3;
         System.out.println("\n新增三元组: (" + newX + ", " + newY + ", " + newZ + ")");
 
         long startTime = System.currentTimeMillis();

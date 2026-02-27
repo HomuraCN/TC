@@ -265,7 +265,7 @@ public class DynamicTriadicUpdater {
 
     /**
      * 定理4：针对新增了【全新属性】的三元组 (newX, y_new, newZ)，进行概念更新
-     * 利用推论1直接判定 |EC'| 与 |EC|，完全规避全局候选集的重新计算。
+     * 修复了 modus 继承越界问题，精准实现概念的分裂与保留。
      */
     public static Set<TriadicConcept> generateByTheorem4(List<TriadicConcept> oldConcepts, Tradic oldTradic, int newX, int newZ) {
         Set<TriadicConcept> newConcepts = new HashSet<>();
@@ -280,7 +280,6 @@ public class DynamicTriadicUpdater {
         }
 
         // 2. 利用推论1直接计算 |EC'(a1)| 与 |EC(a1)| 是否相等
-        // 2.1 提取对象 newX 在所有条件下的属性集合，放入集合 S
         Set<BitSet> S = new HashSet<>();
         for (int k = 1; k <= oldTradic.getZ(); k++) {
             int key = (newX - 1) * oldTradic.getZ() + k;
@@ -290,7 +289,6 @@ public class DynamicTriadicUpdater {
             }
         }
 
-        // 2.2 快速求 S 的幂集交集，得到旧的外延待选集 EC(a1)
         Set<BitSet> EC_a1 = new HashSet<>();
         Set<Set<BitSet>> powerSet = extendCandidate.powerSet(S);
         for (Set<BitSet> subset : powerSet) {
@@ -304,22 +302,22 @@ public class DynamicTriadicUpdater {
             }
         }
 
-        // 2.3 判断 EC(a1) 中是否包含 B_{a3}^{a1} 的超集
         int delta = 0;
         for (BitSet A : EC_a1) {
             BitSet temp = (BitSet) A.clone();
             temp.and(B_a3_a1);
-            if (temp.equals(B_a3_a1)) { // 判定条件：B_{a3}^{a1} ⊆ A
+            if (temp.equals(B_a3_a1)) {
                 delta++;
             }
         }
-        boolean isSizeEqual = (delta == 0); // 判断 |EC'(a1)| 是否等于 |EC(a1)|
+        boolean isSizeEqual = (delta == 0);
 
-        boolean hasA1Concept = false; // 用于标记原背景中是否存在外延为 {a1} 的概念
+        boolean hasA1Concept = false;
+        boolean generatedNew = false; // 标记是否已经在遍历中生成了包含新属性的新概念
 
         // 3. 遍历旧概念，执行定理4的 O(1) 判定与更新
         for (TriadicConcept oldC : oldConcepts) {
-            // 补充处理：对空外延或空方式的极限概念，内涵必定包含所有属性，需补充新属性 (参考论文2.2节文字描述)
+            // 对空外延或空方式的极限概念，内涵必定包含所有属性，需补充新属性
             if (oldC.extent.isEmpty() || oldC.modus.isEmpty()) {
                 TriadicConcept updatedC = new TriadicConcept(oldC.extent, oldC.intent, oldC.modus);
                 updatedC.intent.set(y_new);
@@ -329,47 +327,35 @@ public class DynamicTriadicUpdater {
 
             boolean isOnlyA1 = (oldC.extent.cardinality() == 1 && oldC.extent.get(newX));
 
-            if (!isOnlyA1) {
-                // 定理4(1): 若 A1 != {a1}，保持不变
-                newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
-            } else {
+            if (isOnlyA1) {
                 hasA1Concept = true;
-                // 定理4(2): 若 A1 == {a1}
-                if (!oldC.modus.get(newZ)) {
-                    // a3 不在 A3 中，保持不变
-                    newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
-                } else {
-                    // a3 在 A3 中
-                    if (oldC.intent.equals(B_a3_a1)) {
-                        // 若 A2 == B_{a3}^{a1}，内涵更新增加 a2
-                        TriadicConcept updatedC = new TriadicConcept(oldC.extent, oldC.intent, oldC.modus);
-                        updatedC.intent.set(y_new);
-                        newConcepts.add(updatedC);
-                    } else {
-                        // 若 A2 != B_{a3}^{a1}
-                        if (isSizeEqual) {
-                            // |EC'(a1)| == |EC(a1)|，仅保持旧概念
-                            newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
-                        } else {
-                            // |EC'(a1)| != |EC(a1)|，保留旧概念，并生成新概念
-                            newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
+                if (oldC.modus.get(newZ) && oldC.intent.equals(B_a3_a1)) {
+                    // 若 A2 == B_a3_a1
+                    // 【修复核心1】：产生一个仅在 newZ 条件下包含新属性的新概念
+                    BitSet newModus = new BitSet();
+                    newModus.set(newZ);
+                    TriadicConcept updatedC = new TriadicConcept(oldC.extent, oldC.intent, newModus);
+                    updatedC.intent.set(y_new);
+                    newConcepts.add(updatedC);
+                    generatedNew = true;
 
-                            // 依据推论1，严格校验 B_{a3}^{a1} ⊆ A2，只有满足条件的 A2 才能生成含 a2 的新概念
-                            BitSet checkInclude = (BitSet) oldC.intent.clone();
-                            checkInclude.and(B_a3_a1);
-                            if (checkInclude.equals(B_a3_a1)) {
-                                TriadicConcept updatedC = new TriadicConcept(oldC.extent, oldC.intent, oldC.modus);
-                                updatedC.intent.set(y_new);
-                                newConcepts.add(updatedC);
-                            }
-                        }
+                    // 【修复核心2】：如果原概念在其他条件下依然存活(cardinality > 1)，必须保留旧概念！
+                    if (oldC.modus.cardinality() > 1) {
+                        newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
                     }
+                } else {
+                    // a3 不在 A3 中，或者 A2 != B_a3_a1，此时旧概念不受新属性影响，直接保留
+                    newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
                 }
+            } else {
+                // A1 != {a1} 的概念不受影响，直接保留
+                newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
             }
         }
 
-        // 定理4(3): 若原三元背景中根本不存在外延为 {a1} 的概念，则基于新增点直接生成一个
-        if (!hasA1Concept) {
+        // 4. 定理4(3) 及 |EC'| != |EC| 的补充生成
+        // 如果原三元背景中根本不存在 A1={a1} 的概念，或者 |EC'| != |EC| 导致 B_a3_a1 产生了一个全新的闭包
+        if (!hasA1Concept || (!isSizeEqual && !generatedNew)) {
             BitSet ext = new BitSet(); ext.set(newX);
             BitSet intt = (BitSet) B_a3_a1.clone(); intt.set(y_new);
             BitSet mod = new BitSet(); mod.set(newZ);

@@ -1,19 +1,26 @@
 import algorithm.DynamicTriadicUpdater;
 import algorithm.Tradic;
 import algorithm.TriadicConcept;
+import org.junit.jupiter.api.Test;
 import utils.Context;
 import algorithm.File; // 引入你提供的 File 类
 import utils.TriadicConceptGenerator;
 
 import java.util.*;
 
-public class TestCase1 {
-    public static void main(String[] args) throws Exception { // 添加 throws Exception
+public class TestAlgorithm1 {
+    @Test
+    void test(){
         // 1. 初始化原三元背景
         String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt"; // 请替换为实际包含例1数据的文件路径
 
         // 正确调用 File 类
-        Tradic tradic = File.readFileToTradic(filePath);
+        Tradic tradic = null;
+        try {
+            tradic = File.readFileToTradic(filePath);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         // 手动从 tradic 构建诱导形式背景 Context
         Context context = new Context();

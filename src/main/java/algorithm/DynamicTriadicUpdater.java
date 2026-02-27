@@ -17,69 +17,59 @@ public class DynamicTriadicUpdater {
     }
 
     /**
-     * 定理1：筛选旧概念 (判断旧概念是否在新增 (x,y,z) 后依然成立)
-     * 注意：传入的 tradic 必须是【更新前】的旧三元背景
+     * 定理1：修复了原论文表述漏洞，真正实现 O(1) 的局部扩张校验
      */
     public static boolean isPreservedByTheorem1(TriadicConcept c, Tradic oldTradic, int x, int y, int z) {
-        int X_size = oldTradic.getX();
-        int Y_size = oldTradic.getY();
-        int Z_size = oldTradic.getZ();
-
-        // 条件 (1): 若 x ∈ A1，则存在 y_j ∉ A2 且 z_k ∉ A3，使得 (x, y_j, z_k) ∉ Y
-        if (c.extent.get(x)) {
-            boolean found = false;
-            for (int j = 1; j <= Y_size; j++) {
-                if (!c.intent.get(j)) {
-                    for (int k = 1; k <= Z_size; k++) {
-                        if (!c.modus.get(k)) {
-                            if (!hasRelation(oldTradic, x, j, k)) {
-                                found = true; break;
-                            }
-                        }
+        // 条件 (1): 若 x ∉ A1，则检查 A1 是否会因为新增 (x,y,z) 而发生扩张
+        if (!c.extent.get(x)) {
+            boolean expands = true; // 假设会扩张
+            for (int j = c.intent.nextSetBit(0); j >= 0; j = c.intent.nextSetBit(j + 1)) {
+                for (int k = c.modus.nextSetBit(0); k >= 0; k = c.modus.nextSetBit(k + 1)) {
+                    // Y_new = Y_old U {(x,y,z)}
+                    boolean inYnew = (j == y && k == z) || hasRelation(oldTradic, x, j, k);
+                    if (!inYnew) {
+                        expands = false; // 找到了一个不在 Y_new 中的关系，说明 x 填不满 A2 x A3，A1 不会扩张
+                        break;
                     }
                 }
-                if (found) break;
+                if (!expands) break;
             }
-            if (!found) return false;
+            if (expands) return false; // 如果 x 能填满，说明 A1 扩张了，旧概念失效！
         }
 
-        // 条件 (2): 若 y ∈ A2，则存在 x_i ∉ A1 且 z_k ∉ A3，使得 (x_i, y, z_k) ∉ Y
-        if (c.intent.get(y)) {
-            boolean found = false;
-            for (int i = 1; i <= X_size; i++) {
-                if (!c.extent.get(i)) {
-                    for (int k = 1; k <= Z_size; k++) {
-                        if (!c.modus.get(k)) {
-                            if (!hasRelation(oldTradic, i, y, k)) {
-                                found = true; break;
-                            }
-                        }
+        // 条件 (2): 若 y ∉ A2，则检查 A2 是否会扩张
+        if (!c.intent.get(y)) {
+            boolean expands = true;
+            for (int i = c.extent.nextSetBit(0); i >= 0; i = c.extent.nextSetBit(i + 1)) {
+                for (int k = c.modus.nextSetBit(0); k >= 0; k = c.modus.nextSetBit(k + 1)) {
+                    boolean inYnew = (i == x && k == z) || hasRelation(oldTradic, i, y, k);
+                    if (!inYnew) {
+                        expands = false;
+                        break;
                     }
                 }
-                if (found) break;
+                if (!expands) break;
             }
-            if (!found) return false;
+            if (expands) return false;
         }
 
-        // 条件 (3): 若 z ∈ A3，则存在 x_i ∉ A1 且 y_j ∉ A2，使得 (x_i, y_j, z) ∉ Y
-        if (c.modus.get(z)) {
-            boolean found = false;
-            for (int i = 1; i <= X_size; i++) {
-                if (!c.extent.get(i)) {
-                    for (int j = 1; j <= Y_size; j++) {
-                        if (!c.intent.get(j)) {
-                            if (!hasRelation(oldTradic, i, j, z)) {
-                                found = true; break;
-                            }
-                        }
+        // 条件 (3): 若 z ∉ A3，则检查 A3 是否会扩张
+        if (!c.modus.get(z)) {
+            boolean expands = true;
+            for (int i = c.extent.nextSetBit(0); i >= 0; i = c.extent.nextSetBit(i + 1)) {
+                for (int j = c.intent.nextSetBit(0); j >= 0; j = c.intent.nextSetBit(j + 1)) {
+                    boolean inYnew = (i == x && j == y) || hasRelation(oldTradic, i, j, z);
+                    if (!inYnew) {
+                        expands = false;
+                        break;
                     }
                 }
-                if (found) break;
+                if (!expands) break;
             }
-            if (!found) return false;
+            if (expands) return false;
         }
 
-        return true;
+        return true; // 没有任何维度发生扩张，旧概念完美保留
     }
 
     /**

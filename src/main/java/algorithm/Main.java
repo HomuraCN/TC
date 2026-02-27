@@ -11,7 +11,7 @@ public class Main {
     public static long count=1;
     public static void main(String[] args) throws Exception {
         long start = System.currentTimeMillis();
-        Tradic tradic = File.readFileToTradic("D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context1.txt");
+        Tradic tradic = File.readFileToTradic("D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt");
         Context context=new Context();
         context.setAttrs(tradic.getAttrsAndCondi_Attr());
         context.setObjs(tradic.getAttrsAndCondi_Obj());

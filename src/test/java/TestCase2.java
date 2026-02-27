@@ -1,0 +1,55 @@
+import algorithm.DynamicTriadicUpdater;
+import algorithm.Tradic;
+import algorithm.TriadicConcept;
+import utils.Context;
+import algorithm.File; // 引入你提供的 File 类
+import utils.TriadicConceptGenerator;
+
+import java.util.*;
+
+public class TestCase2 {
+    public static void main(String[] args) throws Exception { // 添加 throws Exception
+        // 1. 初始化原三元背景
+        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt";
+
+        // 正确调用 File 类
+        Tradic tradic = File.readFileToTradic(filePath);
+
+        // 手动从 tradic 构建诱导形式背景 Context
+        Context context = new Context();
+        context.setObjs_size(tradic.getX());
+        context.setAttrs_size(tradic.getAttrsAndCondi_AttrSize());
+        context.setAttrs(tradic.getAttrsAndCondi_Attr());
+        context.setObjs(tradic.getAttrsAndCondi_Obj());
+
+        // 2. 获取旧概念集合
+        System.out.println("正在计算原背景的三元概念...");
+        List<TriadicConcept> oldConcepts = TriadicConceptGenerator.getAllTriadicConcepts(tradic, context);
+        System.out.println("原背景三元概念总数: " + oldConcepts.size());
+
+        // 3. 设定新增的三元组 (对应论文 例3，增加属性5，在点 (1, 5, 1) 处)
+        int newX = 1;
+        int newZ = 1;
+        System.out.println("\n新增三元组: 包含全新属性，位于对象 " + newX + ", 条件 " + newZ);
+
+        long startTime = System.currentTimeMillis();
+
+        // 4. 扩容底层矩阵数据结构 (生成 K+)
+        Tradic newTradic = DynamicTriadicUpdater.expandTradicContext(tradic, newX, newZ);
+
+        // 5. 应用定理4：O(1) 瞬时更新全部概念
+        Set<TriadicConcept> finalConcepts = DynamicTriadicUpdater.generateByTheorem4(oldConcepts, tradic, newX, newZ);
+
+        long endTime = System.currentTimeMillis();
+
+        System.out.println("\n--- 第二类情况更新完成 ---");
+        System.out.println("属性维度已从 " + tradic.getY() + " 扩充至 " + newTradic.getY());
+        System.out.println("最新三元概念总数: " + finalConcepts.size());
+        System.out.println("定理4更新耗时: " + (endTime - startTime) + " ms");
+
+        // 打印结果比对论文例3
+        for (TriadicConcept c : finalConcepts) {
+            System.out.println(c);
+        }
+    }
+}

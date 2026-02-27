@@ -90,13 +90,11 @@ public class DynamicTriadicUpdater {
     }
 
     /**
-     * 定理2：在更新后的背景上，局部生成包含新增三元组的新概念
-     * 注意：传入的 newTradic 必须是【更新后】的三元背景
+     * 定理2：修复了 cardinality == 0 带来的空集覆盖 Bug
      */
     public static Set<TriadicConcept> generateByTheorem2(Tradic newTradic, Context newContext, int x, int y, int z) {
         Set<TriadicConcept> newConcepts = new HashSet<>();
 
-        // 1. 获取新背景 K+^(1) 的全部形式概念
         Concept initialConcept = new Concept();
         initialConcept.setExtent(makeSet(newContext.getObjs_size()));
         initialConcept.setIntent(new BitSet());
@@ -104,7 +102,6 @@ public class DynamicTriadicUpdater {
         Queue<Concept> res = new LinkedList<>();
         InClose3.inClose3_exe(newContext, initialConcept, 1, nj, res);
 
-        // 2. 定理2优化：只保留外延包含对象 x 的形式概念
         Queue<Concept> filteredRes = new LinkedList<>();
         for (Concept c : res) {
             if (c.getExtent().get(x)) {
@@ -112,46 +109,50 @@ public class DynamicTriadicUpdater {
             }
         }
 
-        // 3. 计算外延待选集
         Map<BitSet, Set<BitSet>> candidatesMap = extendCandidate.extendCandidateExe(newTradic, filteredRes);
 
-        // 4. 验证与生成三元概念 (完全复用 Main.java 的检验逻辑)
         for (Map.Entry<BitSet, Set<BitSet>> entry : candidatesMap.entrySet()) {
             BitSet extentX = entry.getKey();
             Set<BitSet> candidateA = entry.getValue();
 
             for (BitSet intent : candidateA) {
-                // 求 Z = (X × A)^(3)
+                // 修复 Bug：使用 boolean 标志位来判断是否是首次赋值，而不是 cardinality()
                 BitSet modusZ = new BitSet();
+                boolean isFirstZ = true;
                 for (int i = extentX.nextSetBit(0); i >= 0; i = extentX.nextSetBit(i + 1)) {
                     for (int j = intent.nextSetBit(0); j >= 0; j = intent.nextSetBit(j + 1)) {
                         int num = (i - 1) * newTradic.getY() + j;
-                        if (modusZ.cardinality() == 0) {
-                            modusZ = (BitSet) newTradic.getObjsAndAttrs_Attr().get(num).clone();
+                        BitSet temp = newTradic.getObjsAndAttrs_Attr().get(num);
+                        if (temp == null) temp = new BitSet();
+
+                        if (isFirstZ) {
+                            modusZ = (BitSet) temp.clone();
+                            isFirstZ = false;
                         } else {
-                            BitSet temp = newTradic.getObjsAndAttrs_Attr().get(num);
-                            modusZ = intersection(temp, modusZ);
+                            modusZ.and(temp); // 直接利用原生的高效 AND 操作求交集
                         }
                     }
                 }
 
-                // 求 X' = (A × Z)^(1)
                 BitSet derivedExtent = new BitSet();
+                boolean isFirstX = true;
                 for (int j = intent.nextSetBit(0); j >= 0; j = intent.nextSetBit(j + 1)) {
                     for (int k = modusZ.nextSetBit(0); k >= 0; k = modusZ.nextSetBit(k + 1)) {
                         int num = (j - 1) * newTradic.getZ() + k;
-                        if (derivedExtent.cardinality() == 0) {
-                            derivedExtent = (BitSet) newTradic.getAttrsAndCondi_Attr().get(num).clone();
+                        BitSet temp = newTradic.getAttrsAndCondi_Attr().get(num);
+                        if (temp == null) temp = new BitSet();
+
+                        if (isFirstX) {
+                            derivedExtent = (BitSet) temp.clone();
+                            isFirstX = false;
                         } else {
-                            BitSet temp = newTradic.getAttrsAndCondi_Attr().get(num);
-                            derivedExtent = intersection(temp, derivedExtent);
+                            derivedExtent.and(temp);
                         }
                     }
                 }
 
-                // 验证 X' == X
-                if (isEqual(derivedExtent, extentX)) {
-                    // 【非常关键】定理2指明，所有因新增而变化或生成的三元概念，必定包含该新增点
+                // isFirstX 为 false 代表有发生过交集计算，避免空集判断异常
+                if (!isFirstX && isEqual(derivedExtent, extentX)) {
                     if (extentX.get(x) && intent.get(y) && modusZ.get(z)) {
                         newConcepts.add(new TriadicConcept(extentX, intent, modusZ));
                     }

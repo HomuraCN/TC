@@ -118,9 +118,27 @@ public class DynamicTriadicUpdater {
         Queue<Concept> res = new LinkedList<>();
         InClose3.inClose3_exe(newContext, initialConcept, 1, nj, res);
 
+        // 计算 RIGHT = {(a2, a3)}^(1)'
+        int yzKey = (y - 1) * newTradic.getZ() + z;
+        BitSet rightBoundary = newTradic.getAttrsAndCondi_Attr().get(yzKey);
+        if (rightBoundary == null) rightBoundary = new BitSet();
+
         Queue<Concept> filteredRes = new LinkedList<>();
         for (Concept c : res) {
-            if (c.getExtent().get(x)) {
+            BitSet X = c.getExtent();
+
+            // 1. LEFT ⊆ X：
+            // X.get(x) 等价于 {a1}^(1)'(1)' ⊆ X
+            boolean satisfiesLeft = X.get(x);
+
+            // 2. X ⊆ RIGHT：
+            // 集合差集运算 X \ RIGHT 如为空，则 X ⊆ RIGHT
+            BitSet temp = (BitSet) X.clone();
+            temp.andNot(rightBoundary);
+            boolean satisfiesRight = temp.isEmpty();
+
+            // 3. LEFT ⊆ X ⊆ RIGHT
+            if (satisfiesLeft && satisfiesRight) {
                 filteredRes.add(c);
             }
         }

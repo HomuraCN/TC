@@ -17,7 +17,7 @@ public class DynamicTriadicUpdater {
     }
 
     /**
-     * 定理1：修复了原论文表述漏洞，真正实现 O(1) 的局部扩张校验
+     * 定理1
      */
     public static boolean isPreservedByTheorem1(TriadicConcept c, Tradic oldTradic, int x, int y, int z) {
         // 条件 (1): 若 x ∉ A1，则检查 A1 是否会因为新增 (x,y,z) 而发生扩张
@@ -34,7 +34,7 @@ public class DynamicTriadicUpdater {
                 }
                 if (!expands) break;
             }
-            if (expands) return false; // 如果 x 能填满，说明 A1 扩张了，旧概念失效！
+            if (expands) return false; // 旧概念失效
         }
 
         // 条件 (2): 若 y ∉ A2，则检查 A2 是否会扩张
@@ -69,7 +69,7 @@ public class DynamicTriadicUpdater {
             if (expands) return false;
         }
 
-        return true; // 没有任何维度发生扩张，旧概念完美保留
+        return true; // 没有发生扩张，旧概念保留
     }
 
     /**
@@ -90,8 +90,8 @@ public class DynamicTriadicUpdater {
         }
         tradic.getAttrsAndCondi_Attr().get(key2).set(x);
 
-        // 3. 【关键修复】：同步更新 attrsAndCondi_Obj (反向映射)
-        // InClose3 极度依赖此 Map，不更新会导致形式概念计算缺失
+        // 3. 同步更新 attrsAndCondi_Obj (反向映射)
+        // 不更新会导致形式概念计算缺失
         if (tradic.getAttrsAndCondi_Obj().get(x) == null) {
             tradic.getAttrsAndCondi_Obj().put(x, new BitSet());
         }
@@ -106,7 +106,7 @@ public class DynamicTriadicUpdater {
     }
 
     /**
-     * 定理2：修复了 cardinality == 0 带来的空集覆盖 Bug
+     * 定理2
      */
     public static Set<TriadicConcept> generateByTheorem2(Tradic newTradic, Context newContext, int x, int y, int z) {
         Set<TriadicConcept> newConcepts = new HashSet<>();
@@ -132,7 +132,7 @@ public class DynamicTriadicUpdater {
             Set<BitSet> candidateA = entry.getValue();
 
             for (BitSet intent : candidateA) {
-                // 修复 Bug：使用 boolean 标志位来判断是否是首次赋值，而不是 cardinality()
+                // 使用 boolean 标志位来判断是否是首次赋值，而不是 cardinality()
                 BitSet modusZ = new BitSet();
                 boolean isFirstZ = true;
                 for (int i = extentX.nextSetBit(0); i >= 0; i = extentX.nextSetBit(i + 1)) {
@@ -145,7 +145,7 @@ public class DynamicTriadicUpdater {
                             modusZ = (BitSet) temp.clone();
                             isFirstZ = false;
                         } else {
-                            modusZ.and(temp); // 直接利用原生的高效 AND 操作求交集
+                            modusZ.and(temp); // 原生 AND 求交集
                         }
                     }
                 }
@@ -264,8 +264,7 @@ public class DynamicTriadicUpdater {
     }
 
     /**
-     * 定理4：针对新增了【全新属性】的三元组 (newX, y_new, newZ)，进行概念更新
-     * 修复了 modus 继承越界问题，精准实现概念的分裂与保留。
+     * 定理4：针对新增属性的三元组 (newX, y_new, newZ)，进行概念更新
      */
     public static Set<TriadicConcept> generateByTheorem4(List<TriadicConcept> oldConcepts, Tradic oldTradic, int newX, int newZ) {
         Set<TriadicConcept> newConcepts = new HashSet<>();
@@ -279,43 +278,31 @@ public class DynamicTriadicUpdater {
             B_a3_a1 = (BitSet) oldTradic.getObjsAndCondi_Attr().get(ocaKey).clone();
         }
 
-        // 2. 利用推论1直接计算 |EC'(a1)| 与 |EC(a1)| 是否相等
-        Set<BitSet> S = new HashSet<>();
+        // 2. 判断 |EC'(a1)| 与 |EC(a1)| 是否相等
+        // 换了个比较容易懂的写法，和之前的等价
+        boolean isSizeEqual = true;
         for (int k = 1; k <= oldTradic.getZ(); k++) {
+            if (k == newZ) continue; // 排除 B_{a3}^{a1} 自身 (对应公式的 \ {B_a3^a1})
+
             int key = (newX - 1) * oldTradic.getZ() + k;
-            BitSet Bk = oldTradic.getObjsAndCondi_Attr().get(key);
-            if (Bk != null && !Bk.isEmpty()) {
-                S.add(Bk);
-            }
-        }
+            BitSet E = oldTradic.getObjsAndCondi_Attr().get(key);
 
-        Set<BitSet> EC_a1 = new HashSet<>();
-        Set<Set<BitSet>> powerSet = extendCandidate.powerSet(S);
-        for (Set<BitSet> subset : powerSet) {
-            if (subset.isEmpty()) continue;
-            BitSet intersection = (BitSet) subset.iterator().next().clone();
-            for (BitSet bs : subset) {
-                intersection.and(bs);
-            }
-            if (!intersection.isEmpty()) {
-                EC_a1.add(intersection);
-            }
-        }
-
-        int delta = 0;
-        for (BitSet A : EC_a1) {
-            BitSet temp = (BitSet) A.clone();
-            temp.and(B_a3_a1);
-            if (temp.equals(B_a3_a1)) {
-                delta++;
+            if (E != null && !E.isEmpty()) {
+                // 判断 B_{a3}^{a1} 是否是 E 的子集
+                BitSet temp = (BitSet) B_a3_a1.clone();
+                temp.and(E);
+                if (temp.equals(B_a3_a1)) {
+                    // 存在 E 使得 B ⊆ E，此时 |EC'| = |EC| + 1，直接 break
+                    isSizeEqual = false;
+                    break;
+                }
             }
         }
-        boolean isSizeEqual = (delta == 0);
 
         boolean hasA1Concept = false;
         boolean generatedNew = false; // 标记是否已经在遍历中生成了包含新属性的新概念
 
-        // 3. 遍历旧概念，执行定理4的 O(1) 判定与更新
+        // 3. 遍历旧概念，执行定理4的 判定与更新
         for (TriadicConcept oldC : oldConcepts) {
             // 对空外延或空方式的极限概念，内涵必定包含所有属性，需补充新属性
             if (oldC.extent.isEmpty() || oldC.modus.isEmpty()) {
@@ -331,7 +318,7 @@ public class DynamicTriadicUpdater {
                 hasA1Concept = true;
                 if (oldC.modus.get(newZ) && oldC.intent.equals(B_a3_a1)) {
                     // 若 A2 == B_a3_a1
-                    // 【修复核心1】：产生一个仅在 newZ 条件下包含新属性的新概念
+                    // 产生一个仅在 newZ 条件下包含新属性的新概念
                     BitSet newModus = new BitSet();
                     newModus.set(newZ);
                     TriadicConcept updatedC = new TriadicConcept(oldC.extent, oldC.intent, newModus);
@@ -339,7 +326,7 @@ public class DynamicTriadicUpdater {
                     newConcepts.add(updatedC);
                     generatedNew = true;
 
-                    // 【修复核心2】：如果原概念在其他条件下依然存活(cardinality > 1)，必须保留旧概念！
+                    // 如果原概念在其他条件下依然存活(cardinality > 1)，必须保留旧概念
                     if (oldC.modus.cardinality() > 1) {
                         newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
                     }
@@ -354,7 +341,7 @@ public class DynamicTriadicUpdater {
         }
 
         // 4. 定理4(3) 及 |EC'| != |EC| 的补充生成
-        // 如果原三元背景中根本不存在 A1={a1} 的概念，或者 |EC'| != |EC| 导致 B_a3_a1 产生了一个全新的闭包
+        // 如果原三元背景中根本不存在 A1={a1} 的概念，或者 |EC'| != |EC| 导致 B_a3_a1 产生了新的情况
         if (!hasA1Concept || (!isSizeEqual && !generatedNew)) {
             BitSet ext = new BitSet(); ext.set(newX);
             BitSet intt = (BitSet) B_a3_a1.clone(); intt.set(y_new);

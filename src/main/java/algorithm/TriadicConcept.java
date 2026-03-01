@@ -4,9 +4,9 @@ import java.util.BitSet;
 import java.util.Objects;
 
 public class TriadicConcept {
-    public BitSet extent;  // 外延
-    public BitSet intent;  // 内涵
-    public BitSet modus;   // 方式
+    public BitSet extent;
+    public BitSet intent;
+    public BitSet modus;
 
     public TriadicConcept(BitSet extent, BitSet intent, BitSet modus) {
         this.extent = (BitSet) extent.clone();

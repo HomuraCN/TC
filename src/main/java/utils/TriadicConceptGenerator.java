@@ -12,7 +12,7 @@ import static utils.util.*;
 public class TriadicConceptGenerator {
 
     /**
-     * 获取指定三元背景下的所有三元概念 (复刻原 Main.java 的核心逻辑)
+     * 获取指定三元背景下的所有三元概念
      */
     public static List<TriadicConcept> getAllTriadicConcepts(Tradic tradic, Context context) {
         List<TriadicConcept> allConcepts = new ArrayList<>();

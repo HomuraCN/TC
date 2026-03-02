@@ -11,15 +11,17 @@ import java.util.Random;
 
 public class RandomContextWithOutput {
 
-    // 1. 新增一个内部类，用于同时返回 文件名 和 找出的随机全0三元组坐标
+    // 1. 新增 updatedFileName 字段，用于同时返回两个文件名和坐标
     public static class Result {
         public String fileName;
+        public String updatedFileName; // 新增：更新后的文件名
         public int x;
         public int y;
         public int z;
 
-        public Result(String fileName, int x, int y, int z) {
+        public Result(String fileName, String updatedFileName, int x, int y, int z) {
             this.fileName = fileName;
+            this.updatedFileName = updatedFileName;
             this.x = x;
             this.y = y;
             this.z = z;
@@ -28,16 +30,22 @@ public class RandomContextWithOutput {
 
     /**
      * 生成随机的三元形式背景
+     * 增加了 s_updated 参数，代表把 0 变成 1 后的新文件名
      */
-    public static Result randomContext(int objSize, int ySize, int zSize, int m, String s) throws IOException {
+    public static Result randomContext(int objSize, int ySize, int zSize, int m, String s, String s_updated) throws IOException {
 
         int attrSize = ySize * zSize;
 
         String fileName = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\" + s + ".txt";
-        Path path = Paths.get(fileName);
+        String updatedFileName = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\update\\" + s_updated + ".txt";
 
-        try (BufferedWriter writer =
-                     Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+        Path path = Paths.get(fileName);
+        Path updatedPath = Paths.get(updatedFileName);
+
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+            writer.write(objSize + " " + ySize + " " + zSize + "\r\n");
+        }
+        try (BufferedWriter writer = Files.newBufferedWriter(updatedPath, StandardCharsets.UTF_8)) {
             writer.write(objSize + " " + ySize + " " + zSize + "\r\n");
         }
 
@@ -73,32 +81,33 @@ public class RandomContextWithOutput {
             }
         }
 
-        // ----------------- 新增逻辑：你的“随机找0”想法 -----------------
+        // ----------------- 修正后的“随机找0”逻辑 -----------------
         int zeroX = -1, zeroY = -1, zeroZ = -1;
-        // 只有当密度不为 100% 时才去找，否则会死循环
+        int foundRx = -1, foundRj = -1; // 记录找到的 0 在二维数组中的原始坐标
+
         if (m < 100) {
             while (true) {
-                int rX = random.nextInt(objSize); // 随机生成 0 到 objSize-1
-                int rJ = random.nextInt(attrSize); // 随机生成 0 到 attrSize-1
+                int rX = random.nextInt(objSize); // 0 到 objSize-1
+                int rJ = random.nextInt(attrSize); // 0 到 attrSize-1
 
-                // 如果对应位置是 0，我们就找到了！
                 if (array[rX][rJ] == 0) {
-                    zeroX = rX + 1; // 转换为 1-based 对象索引
+                    zeroX = rX + 1; // 对象 x
 
-                    // 将一维的列索引还原为 y 和 z (1-based)
-                    zeroY = (rJ / zSize) + 1;
-                    zeroZ = (rJ % zSize) + 1;
+                    // 正确的逆向映射：矩阵是按条件(z)分块的，每个块大小为 ySize
+                    zeroZ = (rJ / ySize) + 1; // 除以 ySize 的商，代表它落在了第几个条件块
+                    zeroY = (rJ % ySize) + 1; // 除以 ySize 的余数，代表它是该块里的第几个属性
+
+                    foundRx = rX;
+                    foundRj = rJ;
+
                     break;
                 }
             }
         }
         // ---------------------------------------------------------------
 
-        // 写入矩阵数据
-        try (BufferedWriter writer =
-                     Files.newBufferedWriter(path,
-                             StandardCharsets.UTF_8,
-                             StandardOpenOption.APPEND)) {
+        // 1. 将原矩阵写入原文件 (此时 array 里还是 0)
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.APPEND)) {
             for (int i = 0; i < objSize; i++) {
                 for (int j = 0; j < attrSize; j++) {
                     writer.write(array[i][j] + " ");
@@ -107,7 +116,22 @@ public class RandomContextWithOutput {
             }
         }
 
-        // 返回包装好的结果对象
-        return new Result(fileName, zeroX, zeroY, zeroZ);
+        // 2. 将随机找到的那个 0 翻转为 1
+        if (foundRx != -1 && foundRj != -1) {
+            array[foundRx][foundRj] = 1;
+        }
+
+        // 3. 将翻转后的新矩阵写入新文件
+        try (BufferedWriter writer = Files.newBufferedWriter(updatedPath, StandardCharsets.UTF_8, StandardOpenOption.APPEND)) {
+            for (int i = 0; i < objSize; i++) {
+                for (int j = 0; j < attrSize; j++) {
+                    writer.write(array[i][j] + " ");
+                }
+                writer.write("\r\n");
+            }
+        }
+
+        // 返回包装好的结果对象，包含了原文件、新文件以及变更的坐标
+        return new Result(fileName, updatedFileName, zeroX, zeroY, zeroZ);
     }
 }

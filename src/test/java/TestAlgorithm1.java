@@ -12,7 +12,7 @@ public class TestAlgorithm1 {
     @Test
     void test(){
         // 1. 初始化原三元背景
-        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\randomContext.txt"; // 请替换为实际包含例1数据的文件路径
+        String filePath = "D:\\Homura\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\randomContext.txt"; // 请替换为实际包含例1数据的文件路径
 
         Tradic tradic = null;
         try {

@@ -12,7 +12,7 @@ public class TestAlgorithm2 {
     @Test
     void test(){
         // 1. 初始化原三元背景
-        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt";
+        String filePath = "D:\\Homura\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\randomContext.txt";
 
         Tradic tradic = null;
         try {
@@ -34,7 +34,7 @@ public class TestAlgorithm2 {
         System.out.println("原背景三元概念总数: " + oldConcepts.size());
 
         // 3. 设定新增的三元组 (论文 例3 增加属性5 (1, 5, 1) )
-        int newX = 1;
+        int newX = 3;
         int newZ = 1;
         System.out.println("\n新增三元组: 包含全新属性，位于对象 " + newX + ", 条件 " + newZ);
 

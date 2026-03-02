@@ -23,7 +23,7 @@ public class RandomContext {
         // 三元背景展平后的总列数 = 属性数量 * 条件数量
         int attrSize = ySize * zSize;
 
-        String fileName = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\" + s + ".txt";
+        String fileName = "D:\\Homura\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\" + s + ".txt";
         Path path = Paths.get(fileName);
 
         try (BufferedWriter writer =

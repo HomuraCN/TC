@@ -10,7 +10,7 @@ public class TestRandomContext {
     void test(){
         try {
             // 参数依次为: 对象数(3), 属性数(4), 条件数(3), 密度(30%), 文件名("randomContext")
-            System.out.println(RandomContext.randomContext(20, 10, 4, 30, "randomContext"));
+            System.out.println(RandomContext.randomContext(100, 10, 10, 30, "randomContext"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -18,7 +18,7 @@ public class TestRandomContext {
     @Test
     void test1(){
         try {
-            RandomContextWithOutput.Result res = RandomContextWithOutput.randomContext(20, 10, 4, 30, "randomContext", "randomContextUpdateAlgo1");
+            RandomContextWithOutput.Result res = RandomContextWithOutput.randomContext(100, 10, 10, 30, "randomContext", "randomContextUpdateAlgo1");
             System.out.println("生成的文件路径: " + res.fileName);
             System.out.println("随机选取的 0 坐标为: (x=" + res.x + ", y=" + res.y + ", z=" + res.z + ")");
         } catch (IOException e) {

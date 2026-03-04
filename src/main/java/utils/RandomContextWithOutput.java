@@ -36,8 +36,8 @@ public class RandomContextWithOutput {
 
         int attrSize = ySize * zSize;
 
-        String fileName = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\" + s + ".txt";
-        String updatedFileName = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\update\\" + s_updated + ".txt";
+        String fileName = "D:\\Homura\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\" + s + ".txt";
+        String updatedFileName = "D:\\Homura\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\update\\" + s_updated + ".txt";
 
         Path path = Paths.get(fileName);
         Path updatedPath = Paths.get(updatedFileName);

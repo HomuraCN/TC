@@ -317,12 +317,11 @@ public class DynamicTriadicUpdater {
             }
         }
 
-        boolean hasA1Concept = false;
+//        boolean hasA1Concept = false;
         boolean generatedNew = false; // 标记是否已经在遍历中生成了包含新属性的新概念
 
         // 3. 遍历旧概念，执行定理4的 判定与更新
         for (TriadicConcept oldC : oldConcepts) {
-            // 对空外延或空方式的极限概念，内涵必定包含所有属性，需补充新属性
             if (oldC.extent.isEmpty() || oldC.modus.isEmpty()) {
                 TriadicConcept updatedC = new TriadicConcept(oldC.extent, oldC.intent, oldC.modus);
                 updatedC.intent.set(y_new);
@@ -333,7 +332,6 @@ public class DynamicTriadicUpdater {
             boolean isOnlyA1 = (oldC.extent.cardinality() == 1 && oldC.extent.get(newX));
 
             if (isOnlyA1) {
-                hasA1Concept = true;
                 if (oldC.modus.get(newZ) && oldC.intent.equals(B_a3_a1)) {
                     // 若 A2 == B_a3_a1
                     // 产生一个仅在 newZ 条件下包含新属性的新概念
@@ -342,6 +340,7 @@ public class DynamicTriadicUpdater {
                     TriadicConcept updatedC = new TriadicConcept(oldC.extent, oldC.intent, newModus);
                     updatedC.intent.set(y_new);
                     newConcepts.add(updatedC);
+
                     generatedNew = true;
 
                     // 如果原概念在其他条件下依然存活(cardinality > 1)，必须保留旧概念
@@ -349,7 +348,6 @@ public class DynamicTriadicUpdater {
                         newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
                     }
                 } else {
-                    // a3 不在 A3 中，或者 A2 != B_a3_a1，此时旧概念不受新属性影响，直接保留
                     newConcepts.add(new TriadicConcept(oldC.extent, oldC.intent, oldC.modus));
                 }
             } else {
@@ -358,9 +356,7 @@ public class DynamicTriadicUpdater {
             }
         }
 
-        // 4. 定理4(3) 及 |EC'| != |EC| 的补充生成
-        // 如果原三元背景中根本不存在 A1={a1} 的概念，或者 |EC'| != |EC| 导致 B_a3_a1 产生了新的情况
-        if (!hasA1Concept || (!isSizeEqual && !generatedNew)) {
+        if (!generatedNew) {
             BitSet ext = new BitSet(); ext.set(newX);
             BitSet intt = (BitSet) B_a3_a1.clone(); intt.set(y_new);
             BitSet mod = new BitSet(); mod.set(newZ);

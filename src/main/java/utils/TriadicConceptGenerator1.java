@@ -1,67 +1,66 @@
 package utils;
 
-import algorithm.*;
+import algorithm.InClose3;
+import algorithm.Tradic;
+import algorithm.TriadicConcept;
+import algorithm.extendCandidate1;
 import utils.concept.Concept;
 import java.util.*;
 import static utils.util.*;
 
 public class TriadicConceptGenerator1 {
 
-    public static List<TriadicConcept> getAllTriadicConcepts(Tradic tradic, Context contextK3) {
+    public static List<TriadicConcept> getAllTriadicConcepts(Tradic tradic, Context ignoredContext) {
         List<TriadicConcept> allConcepts = new ArrayList<>();
 
-        Concept initialConcept = new Concept();
-        initialConcept.setExtent(makeSet(contextK3.getObjs_size()));
-        initialConcept.setIntent(new BitSet());
+        // 完完全全按照 Main1.java 构建 K^(3) 的 Context
+        Context context = new Context();
+        context.setObjs(tradic.getObjsAndAttrs_Obj());
+        context.setObjs_size(tradic.getZ());
+        context.setAttrs(tradic.getObjsAndAttrs_Attr());
+        context.setAttrs_size(tradic.getObjsAndAttrs_AttrSize());
+
+        Concept concept = new Concept();
+        concept.setExtent(makeSet(context.getObjs_size()));
+        concept.setIntent(makeSet(0));
         Map<Integer, BitSet> nj = new HashMap<>();
         Queue<Concept> res = new LinkedList<>();
-        InClose3.inClose3_exe(contextK3, initialConcept, 1, nj, res);
+        InClose3.inClose3_exe(context, concept, 1, nj, res);
 
-        Map<BitSet, Set<BitSet>> candidatesMap = extendCandidate1.extendCandidateExe(tradic, res);
-
-        for (Map.Entry<BitSet, Set<BitSet>> entry : candidatesMap.entrySet()) {
-            BitSet modusX = entry.getKey();
-            Set<BitSet> candidateA = entry.getValue();
-
-            for (BitSet extentA : candidateA) {
-                BitSet intentI = new BitSet();
-                boolean isFirstI = true;
-                for (int j = extentA.nextSetBit(0); j >= 0; j = extentA.nextSetBit(j + 1)) {
-                    for (int i = modusX.nextSetBit(0); i >= 0; i = modusX.nextSetBit(i + 1)) {
+        // 完完全全复刻 Main1.java 的派生与验证逻辑
+        Map<BitSet, Set<BitSet>> bitSetSetMap = extendCandidate1.extendCandidateExe(tradic, res);
+        for(Map.Entry<BitSet, Set<BitSet>> entry : bitSetSetMap.entrySet()){
+            Set<BitSet> set = entry.getValue();
+            for(BitSet value : set){
+                BitSet setTemp = new BitSet();
+                BitSet key = entry.getKey();
+                for(int j = value.nextSetBit(0); j >= 0; j = value.nextSetBit(j + 1)){
+                    for(int i = key.nextSetBit(0); i >= 0; i = key.nextSetBit(i + 1)){
                         int num = (j - 1) * tradic.getZ() + i;
-                        BitSet temp = tradic.getObjsAndCondi_Attr().get(num);
-                        if (temp == null) temp = new BitSet();
-
-                        if (isFirstI) {
-                            intentI = (BitSet) temp.clone();
-                            isFirstI = false;
+                        if(setTemp.cardinality() == 0){
+                            setTemp = tradic.getObjsAndCondi_Attr().get(num);
                         } else {
-                            intentI.and(temp);
+                            BitSet temp = tradic.getObjsAndCondi_Attr().get(num);
+                            setTemp = intersection(temp, setTemp);
                         }
                     }
                 }
-
-                BitSet derivedModusQ = new BitSet();
-                boolean isFirstQ = true;
-                if (!isFirstI) {
-                    for (int i = extentA.nextSetBit(0); i >= 0; i = extentA.nextSetBit(i + 1)) {
-                        for (int j = intentI.nextSetBit(0); j >= 0; j = intentI.nextSetBit(j + 1)) {
-                            int num = (i - 1) * tradic.getY() + j;
+                BitSet setTemp1 = new BitSet();
+                for(int i = value.nextSetBit(0); i >= 0; i = value.nextSetBit(i + 1)){
+                    for(int j = setTemp.nextSetBit(0); j >= 0; j = setTemp.nextSetBit(j + 1)){
+                        int num = (i - 1) * tradic.getY() + j;
+                        if(setTemp1.cardinality() == 0){
+                            setTemp1 = tradic.getObjsAndAttrs_Attr().get(num);
+                        } else {
                             BitSet temp = tradic.getObjsAndAttrs_Attr().get(num);
-                            if (temp == null) temp = new BitSet();
-
-                            if (isFirstQ) {
-                                derivedModusQ = (BitSet) temp.clone();
-                                isFirstQ = false;
-                            } else {
-                                derivedModusQ.and(temp);
-                            }
+                            setTemp1 = intersection(temp, setTemp1);
                         }
                     }
                 }
-
-                if (!isFirstQ && isEqual(derivedModusQ, modusX)) {
-                    allConcepts.add(new TriadicConcept(extentA, intentI, modusX));
+                if(isEqual(setTemp1, key)){
+                    // 对应 Main1: value是外延, setTemp是内涵, key是方式
+                    // 添加 .clone() 防止底层的引用被后续的 addRelationToTradic 污染
+                    allConcepts.add(new TriadicConcept((BitSet)value.clone(), (BitSet)setTemp.clone(), (BitSet)key.clone()));
                 }
             }
         }

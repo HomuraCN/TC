@@ -95,7 +95,7 @@ public class TestAlgorithm1 {
         List<TriadicConcept> oldConcepts = TriadicConceptGenerator2.getAllTriadicConcepts(tradic, context);
         System.out.println("原背景三元概念总数: " + oldConcepts.size());
 
-        int newX = 5; int newY = 7; int newZ = 24;
+        int newX = 1; int newY = 2; int newZ = 3;
         System.out.println("\n[定理 2_2] 新增三元组: (" + newX + ", " + newY + ", " + newZ + ")");
 
         long startTime = System.currentTimeMillis();
@@ -128,7 +128,7 @@ public class TestAlgorithm1 {
 
     @Test
     void test2_3(){
-        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt";
+        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\randomContext.txt";
 
         Tradic tradic = null;
         try {

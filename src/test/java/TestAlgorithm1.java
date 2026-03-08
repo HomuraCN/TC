@@ -93,7 +93,7 @@ public class TestAlgorithm1 {
         List<TriadicConcept> oldConcepts = TriadicConceptGenerator.getAllTriadicConcepts(tradic, context);
         System.out.println("原背景三元概念总数: " + oldConcepts.size());
 
-        int newX = 3; int newY = 1; int newZ = 3;
+        int newX = 7; int newY = 9; int newZ = 25;
         System.out.println("\n[定理 2_2] 新增三元组: (" + newX + ", " + newY + ", " + newZ + ")");
 
         long startTime = System.currentTimeMillis();

@@ -217,10 +217,9 @@ public class DynamicTriadicUpdater {
      */
     public static Set<TriadicConcept> generateByTheorem2_2(Tradic newTradic, Context contextK2, int x, int y, int z) {
         Set<TriadicConcept> newConcepts = new HashSet<>();
-
         Concept initialConcept = new Concept();
         initialConcept.setExtent(makeSet(contextK2.getObjs_size()));
-        initialConcept.setIntent(new BitSet());
+        initialConcept.setIntent(makeSet(0));
         Map<Integer, BitSet> nj = new HashMap<>();
         Queue<Concept> res = new LinkedList<>();
         InClose3.inClose3_exe(contextK2, initialConcept, 1, nj, res);
@@ -253,9 +252,9 @@ public class DynamicTriadicUpdater {
             for (BitSet modusA : candidateA) {
                 BitSet extentE = new BitSet();
                 boolean isFirstE = true;
-                for (int j = intentX.nextSetBit(0); j >= 0; j = intentX.nextSetBit(j + 1)) {
-                    for (int k = modusA.nextSetBit(0); k >= 0; k = modusA.nextSetBit(k + 1)) {
-                        int num = (j - 1) * newTradic.getZ() + k;
+                for (int i = intentX.nextSetBit(0); i >= 0; i = intentX.nextSetBit(i + 1)) {
+                    for (int j = modusA.nextSetBit(0); j >= 0; j = modusA.nextSetBit(j + 1)) {
+                        int num = (i - 1) * newTradic.getZ() + j;
                         BitSet temp = newTradic.getAttrsAndCondi_Attr().get(num);
                         if (temp == null) temp = new BitSet();
 
@@ -271,9 +270,9 @@ public class DynamicTriadicUpdater {
                 BitSet derivedIntentQ = new BitSet();
                 boolean isFirstQ = true;
                 if (!isFirstE) {
-                    for (int i = extentE.nextSetBit(0); i >= 0; i = extentE.nextSetBit(i + 1)) {
-                        for (int k = modusA.nextSetBit(0); k >= 0; k = modusA.nextSetBit(k + 1)) {
-                            int num = (i - 1) * newTradic.getZ() + k;
+                    for (int j = extentE.nextSetBit(0); j >= 0; j = extentE.nextSetBit(j + 1)) {
+                        for (int i = modusA.nextSetBit(0); i >= 0; i = modusA.nextSetBit(i + 1)) {
+                            int num = (j - 1) * newTradic.getZ() + i;
                             BitSet temp = newTradic.getObjsAndCondi_Attr().get(num);
                             if (temp == null) temp = new BitSet();
 
@@ -302,10 +301,9 @@ public class DynamicTriadicUpdater {
      */
     public static Set<TriadicConcept> generateByTheorem2_3(Tradic newTradic, Context contextK3, int x, int y, int z) {
         Set<TriadicConcept> newConcepts = new HashSet<>();
-
         Concept initialConcept = new Concept();
         initialConcept.setExtent(makeSet(contextK3.getObjs_size()));
-        initialConcept.setIntent(new BitSet());
+        initialConcept.setIntent(makeSet(0));
         Map<Integer, BitSet> nj = new HashMap<>();
         Queue<Concept> res = new LinkedList<>();
         InClose3.inClose3_exe(contextK3, initialConcept, 1, nj, res);
@@ -338,9 +336,9 @@ public class DynamicTriadicUpdater {
             for (BitSet extentA : candidateA) {
                 BitSet intentI = new BitSet();
                 boolean isFirstI = true;
-                for (int i = extentA.nextSetBit(0); i >= 0; i = extentA.nextSetBit(i + 1)) {
-                    for (int k = modusX.nextSetBit(0); k >= 0; k = modusX.nextSetBit(k + 1)) {
-                        int num = (i - 1) * newTradic.getZ() + k;
+                for (int j = extentA.nextSetBit(0); j >= 0; j = extentA.nextSetBit(j + 1)) {
+                    for (int i = modusX.nextSetBit(0); i >= 0; i = modusX.nextSetBit(i + 1)) {
+                        int num = (j - 1) * newTradic.getZ() + i;
                         BitSet temp = newTradic.getObjsAndCondi_Attr().get(num);
                         if (temp == null) temp = new BitSet();
 

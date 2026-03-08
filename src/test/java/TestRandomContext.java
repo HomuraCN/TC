@@ -18,7 +18,7 @@ public class TestRandomContext {
     @Test
     void test1(){
         try {
-            RandomContextWithOutput.Result res = RandomContextWithOutput.randomContext(100, 10, 10, 30, "randomContext", "randomContextUpdateAlgo1");
+            RandomContextWithOutput.Result res = RandomContextWithOutput.randomContext(10, 10, 100, 30, "randomContext", "randomContextUpdateAlgo1");
             System.out.println("生成的文件路径: " + res.fileName);
             System.out.println("随机选取的 0 坐标为: (x=" + res.x + ", y=" + res.y + ", z=" + res.z + ")");
         } catch (IOException e) {

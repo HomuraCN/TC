@@ -76,48 +76,64 @@ public class DynamicTriadicUpdater {
      * 将新增的三元组 (x, y, z) 更新到 Tradic 结构中，生成 K+
      */
     public static void addRelationToTradic(Tradic tradic, int x, int y, int z) {
-        // 1. 更新 objsAndAttrs_Attr: key = (i-1)*y+j
+        // 1. 更新 objsAndAttrs (正向与反向): key = (i-1)*y+j
         int key1 = (x - 1) * tradic.getY() + y;
-        if (tradic.getObjsAndAttrs_Attr().get(key1) == null) {
-            tradic.getObjsAndAttrs_Attr().put(key1, new BitSet());
-        }
-        tradic.getObjsAndAttrs_Attr().get(key1).set(z);
-
-        // 2. 更新 attrsAndCondi_Attr: key = (j-1)*z+k
-        int key2 = (y - 1) * tradic.getZ() + z;
-        if (tradic.getAttrsAndCondi_Attr().get(key2) == null) {
-            tradic.getAttrsAndCondi_Attr().put(key2, new BitSet());
-        }
-        tradic.getAttrsAndCondi_Attr().get(key2).set(x);
-
-        // 3. 同步更新 attrsAndCondi_Obj (反向映射)
-        // 不更新会导致形式概念计算缺失
-        if (tradic.getAttrsAndCondi_Obj().get(x) == null) {
-            tradic.getAttrsAndCondi_Obj().put(x, new BitSet());
-        }
-        tradic.getAttrsAndCondi_Obj().get(x).set(key2);
-
-        // 4. 更新 objsAndCondi_Attr: key = (i-1)*z+k
-        int key3 = (x - 1) * tradic.getZ() + z;
-        if (tradic.getObjsAndCondi_Attr().get(key3) == null) {
-            tradic.getObjsAndCondi_Attr().put(key3, new BitSet());
-        }
-        tradic.getObjsAndCondi_Attr().get(key3).set(y);
-
-        // 5. 维护 CondiAndobjs 字典 (条件在前，对象在后)
-        int key5 = (z - 1) * tradic.getX() + x;
-        if (tradic.getCondiAndobjs_Attr() != null) {
-            if (tradic.getCondiAndobjs_Attr().get(key5) == null) {
-                tradic.getCondiAndobjs_Attr().put(key5, new BitSet());
+        if (tradic.getObjsAndAttrs_Attr() != null) {
+            if (tradic.getObjsAndAttrs_Attr().get(key1) == null) {
+                tradic.getObjsAndAttrs_Attr().put(key1, new BitSet());
             }
-            tradic.getCondiAndobjs_Attr().get(key5).set(y);
+            tradic.getObjsAndAttrs_Attr().get(key1).set(z);
+        }
+        if (tradic.getObjsAndAttrs_Obj() != null) {
+            if (tradic.getObjsAndAttrs_Obj().get(z) == null) {
+                tradic.getObjsAndAttrs_Obj().put(z, new BitSet());
+            }
+            tradic.getObjsAndAttrs_Obj().get(z).set(key1);
         }
 
+        // 2. 更新 attrsAndCondi (正向与反向): key = (j-1)*z+k
+        int key2 = (y - 1) * tradic.getZ() + z;
+        if (tradic.getAttrsAndCondi_Attr() != null) {
+            if (tradic.getAttrsAndCondi_Attr().get(key2) == null) {
+                tradic.getAttrsAndCondi_Attr().put(key2, new BitSet());
+            }
+            tradic.getAttrsAndCondi_Attr().get(key2).set(x);
+        }
+        if (tradic.getAttrsAndCondi_Obj() != null) {
+            if (tradic.getAttrsAndCondi_Obj().get(x) == null) {
+                tradic.getAttrsAndCondi_Obj().put(x, new BitSet());
+            }
+            tradic.getAttrsAndCondi_Obj().get(x).set(key2);
+        }
+
+        // 3. 更新 objsAndCondi (正向与反向): key = (i-1)*z+k
+        int key3 = (x - 1) * tradic.getZ() + z;
+        if (tradic.getObjsAndCondi_Attr() != null) {
+            if (tradic.getObjsAndCondi_Attr().get(key3) == null) {
+                tradic.getObjsAndCondi_Attr().put(key3, new BitSet());
+            }
+            tradic.getObjsAndCondi_Attr().get(key3).set(y);
+        }
+        if (tradic.getObjsAndCondi_Obj() != null) {
+            if (tradic.getObjsAndCondi_Obj().get(y) == null) {
+                tradic.getObjsAndCondi_Obj().put(y, new BitSet());
+            }
+            tradic.getObjsAndCondi_Obj().get(y).set(key3);
+        }
+
+        // 4. 专门为定理 2_2 维护 CondiAndobjs 字典 (条件在前，对象在后)
+        int key4 = (z - 1) * tradic.getX() + x;
+        if (tradic.getCondiAndobjs_Attr() != null) {
+            if (tradic.getCondiAndobjs_Attr().get(key4) == null) {
+                tradic.getCondiAndobjs_Attr().put(key4, new BitSet());
+            }
+            tradic.getCondiAndobjs_Attr().get(key4).set(y);
+        }
         if (tradic.getCondiAndobjs_Obj() != null) {
             if (tradic.getCondiAndobjs_Obj().get(y) == null) {
                 tradic.getCondiAndobjs_Obj().put(y, new BitSet());
             }
-            tradic.getCondiAndobjs_Obj().get(y).set(key5);
+            tradic.getCondiAndobjs_Obj().get(y).set(key4);
         }
     }
 

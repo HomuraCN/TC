@@ -2,6 +2,8 @@ import algorithm.*;
 import org.junit.jupiter.api.Test;
 import utils.Context;
 import utils.TriadicConceptGenerator;
+import utils.TriadicConceptGenerator1;
+import utils.TriadicConceptGenerator2;
 
 import java.util.*;
 
@@ -74,7 +76,7 @@ public class TestAlgorithm1 {
 
     @Test
     void test2_2(){
-        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt";
+        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\randomContext.txt";
 
         Tradic tradic = null;
         try {
@@ -90,10 +92,10 @@ public class TestAlgorithm1 {
         context.setObjs(tradic.getAttrsAndCondi_Obj());
 
         System.out.println("计算原背景的三元概念");
-        List<TriadicConcept> oldConcepts = TriadicConceptGenerator.getAllTriadicConcepts(tradic, context);
+        List<TriadicConcept> oldConcepts = TriadicConceptGenerator2.getAllTriadicConcepts(tradic, context);
         System.out.println("原背景三元概念总数: " + oldConcepts.size());
 
-        int newX = 7; int newY = 9; int newZ = 25;
+        int newX = 5; int newY = 7; int newZ = 24;
         System.out.println("\n[定理 2_2] 新增三元组: (" + newX + ", " + newY + ", " + newZ + ")");
 
         long startTime = System.currentTimeMillis();
@@ -142,9 +144,9 @@ public class TestAlgorithm1 {
         context.setObjs(tradic.getAttrsAndCondi_Obj());
 
         System.out.println("计算原背景的三元概念");
-        List<TriadicConcept> oldConcepts = TriadicConceptGenerator.getAllTriadicConcepts(tradic, context);
+        List<TriadicConcept> oldConcepts = TriadicConceptGenerator1.getAllTriadicConcepts(tradic, context);
 
-        int newX = 2; int newY = 2; int newZ = 1;
+        int newX = 1; int newY = 2; int newZ = 3;
         System.out.println("\n[定理 2_3] 新增三元组: (" + newX + ", " + newY + ", " + newZ + ")");
 
         long startTime = System.currentTimeMillis();

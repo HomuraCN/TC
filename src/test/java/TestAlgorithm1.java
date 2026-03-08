@@ -1,9 +1,6 @@
-import algorithm.DynamicTriadicUpdater;
-import algorithm.Tradic;
-import algorithm.TriadicConcept;
+import algorithm.*;
 import org.junit.jupiter.api.Test;
 import utils.Context;
-import algorithm.File; // 引入你提供的 File 类
 import utils.TriadicConceptGenerator;
 
 import java.util.*;
@@ -12,7 +9,7 @@ public class TestAlgorithm1 {
     @Test
     void test(){
         // 1. 初始化原三元背景
-        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\random\\origin\\randomContext.txt"; // 请替换为实际包含例1数据的文件路径
+        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt"; // 请替换为实际包含例1数据的文件路径
 
         Tradic tradic = null;
         try {
@@ -34,9 +31,9 @@ public class TestAlgorithm1 {
         System.out.println("原背景三元概念总数: " + oldConcepts.size());
 
         // 3. 设定新增的三元组 (论文 例2 新增 (3, 4, 1))
-        int newX = 6;
-        int newY = 3;
-        int newZ = 4;
+        int newX = 2;
+        int newY = 2;
+        int newZ = 1;
         System.out.println("\n新增三元组: (" + newX + ", " + newY + ", " + newZ + ")");
 
         long startTime = System.currentTimeMillis();
@@ -70,6 +67,109 @@ public class TestAlgorithm1 {
         System.out.println("增量更新耗时: " + (endTime - startTime) + " ms");
 
         // 结果输出
+        for (TriadicConcept c : finalConcepts) {
+            System.out.println(c);
+        }
+    }
+
+    @Test
+    void test2_2(){
+        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt";
+
+        Tradic tradic = null;
+        try {
+            tradic = File2.readFileToTradic(filePath); // 调用 File2
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        Context context = new Context();
+        context.setObjs_size(tradic.getX());
+        context.setAttrs_size(tradic.getAttrsAndCondi_AttrSize());
+        context.setAttrs(tradic.getAttrsAndCondi_Attr());
+        context.setObjs(tradic.getAttrsAndCondi_Obj());
+
+        System.out.println("计算原背景的三元概念");
+        List<TriadicConcept> oldConcepts = TriadicConceptGenerator.getAllTriadicConcepts(tradic, context);
+        System.out.println("原背景三元概念总数: " + oldConcepts.size());
+
+        int newX = 3; int newY = 1; int newZ = 3;
+        System.out.println("\n[定理 2_2] 新增三元组: (" + newX + ", " + newY + ", " + newZ + ")");
+
+        long startTime = System.currentTimeMillis();
+        Set<TriadicConcept> finalConcepts = new HashSet<>();
+
+        for (TriadicConcept oldC : oldConcepts) {
+            if (DynamicTriadicUpdater.isPreservedByTheorem1(oldC, tradic, newX, newY, newZ)) {
+                finalConcepts.add(oldC);
+            }
+        }
+
+        DynamicTriadicUpdater.addRelationToTradic(tradic, newX, newY, newZ);
+
+        Context contextK2 = new Context();
+        contextK2.setObjs_size(tradic.getY());
+        contextK2.setAttrs_size(tradic.getZ() * tradic.getX());
+        contextK2.setAttrs(tradic.getCondiAndobjs_Attr());
+        contextK2.setObjs(tradic.getCondiAndobjs_Obj());
+
+        Set<TriadicConcept> newGenConcepts = DynamicTriadicUpdater.generateByTheorem2_2(tradic, contextK2, newX, newY, newZ);
+        finalConcepts.addAll(newGenConcepts);
+
+        System.out.println("最新三元概念总数: " + finalConcepts.size());
+        System.out.println("增量更新耗时: " + (System.currentTimeMillis() - startTime) + " ms");
+
+        for (TriadicConcept c : finalConcepts) {
+            System.out.println(c);
+        }
+    }
+
+    @Test
+    void test2_3(){
+        String filePath = "D:\\H\\Code\\Java\\TC\\src\\main\\java\\datasets\\context.txt";
+
+        Tradic tradic = null;
+        try {
+            tradic = File2.readFileToTradic(filePath);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        Context context = new Context();
+        context.setObjs_size(tradic.getX());
+        context.setAttrs_size(tradic.getAttrsAndCondi_AttrSize());
+        context.setAttrs(tradic.getAttrsAndCondi_Attr());
+        context.setObjs(tradic.getAttrsAndCondi_Obj());
+
+        System.out.println("计算原背景的三元概念");
+        List<TriadicConcept> oldConcepts = TriadicConceptGenerator.getAllTriadicConcepts(tradic, context);
+
+        int newX = 2; int newY = 2; int newZ = 1;
+        System.out.println("\n[定理 2_3] 新增三元组: (" + newX + ", " + newY + ", " + newZ + ")");
+
+        long startTime = System.currentTimeMillis();
+        Set<TriadicConcept> finalConcepts = new HashSet<>();
+
+        for (TriadicConcept oldC : oldConcepts) {
+            if (DynamicTriadicUpdater.isPreservedByTheorem1(oldC, tradic, newX, newY, newZ)) {
+                finalConcepts.add(oldC);
+            }
+        }
+
+        DynamicTriadicUpdater.addRelationToTradic(tradic, newX, newY, newZ);
+
+        Context contextK3 = new Context();
+        contextK3.setObjs_size(tradic.getZ());
+        contextK3.setAttrs_size(tradic.getX() * tradic.getY());
+        contextK3.setAttrs(tradic.getObjsAndAttrs_Attr());
+        contextK3.setObjs(tradic.getObjsAndAttrs_Obj());
+
+        Set<TriadicConcept> newGenConcepts = DynamicTriadicUpdater.generateByTheorem2_3(tradic, contextK3, newX, newY, newZ);
+        finalConcepts.addAll(newGenConcepts);
+
+        System.out.println("最新三元概念总数: " + finalConcepts.size());
+        System.out.println("增量更新耗时: " + (System.currentTimeMillis() - startTime) + " ms");
+
         for (TriadicConcept c : finalConcepts) {
             System.out.println(c);
         }

@@ -103,6 +103,22 @@ public class DynamicTriadicUpdater {
             tradic.getObjsAndCondi_Attr().put(key3, new BitSet());
         }
         tradic.getObjsAndCondi_Attr().get(key3).set(y);
+
+        // 5. 维护 CondiAndobjs 字典 (条件在前，对象在后)
+        int key5 = (z - 1) * tradic.getX() + x;
+        if (tradic.getCondiAndobjs_Attr() != null) {
+            if (tradic.getCondiAndobjs_Attr().get(key5) == null) {
+                tradic.getCondiAndobjs_Attr().put(key5, new BitSet());
+            }
+            tradic.getCondiAndobjs_Attr().get(key5).set(y);
+        }
+
+        if (tradic.getCondiAndobjs_Obj() != null) {
+            if (tradic.getCondiAndobjs_Obj().get(y) == null) {
+                tradic.getCondiAndobjs_Obj().put(y, new BitSet());
+            }
+            tradic.getCondiAndobjs_Obj().get(y).set(key5);
+        }
     }
 
     /**
@@ -189,6 +205,176 @@ public class DynamicTriadicUpdater {
                 if (!isFirstX && isEqual(derivedExtent, extentX)) {
                     if (extentX.get(x) && intent.get(y) && modusZ.get(z)) {
                         newConcepts.add(new TriadicConcept(extentX, intent, modusZ));
+                    }
+                }
+            }
+        }
+        return newConcepts;
+    }
+
+    /**
+     * 定理2_2
+     */
+    public static Set<TriadicConcept> generateByTheorem2_2(Tradic newTradic, Context contextK2, int x, int y, int z) {
+        Set<TriadicConcept> newConcepts = new HashSet<>();
+
+        Concept initialConcept = new Concept();
+        initialConcept.setExtent(makeSet(contextK2.getObjs_size()));
+        initialConcept.setIntent(new BitSet());
+        Map<Integer, BitSet> nj = new HashMap<>();
+        Queue<Concept> res = new LinkedList<>();
+        InClose3.inClose3_exe(contextK2, initialConcept, 1, nj, res);
+
+        int xzKey = (x - 1) * newTradic.getZ() + z;
+        BitSet rightBoundary = newTradic.getObjsAndCondi_Attr().get(xzKey);
+        if (rightBoundary == null) rightBoundary = new BitSet();
+
+        Queue<Concept> filteredRes = new LinkedList<>();
+        for (Concept c : res) {
+            BitSet X = c.getExtent();
+
+            boolean satisfiesLeft = X.get(y);
+
+            BitSet temp = (BitSet) X.clone();
+            temp.andNot(rightBoundary);
+            boolean satisfiesRight = temp.isEmpty();
+
+            if (satisfiesLeft && satisfiesRight) {
+                filteredRes.add(c);
+            }
+        }
+
+        Map<BitSet, Set<BitSet>> candidatesMap = extendCandidate2.extendCandidateExe(newTradic, filteredRes);
+
+        for (Map.Entry<BitSet, Set<BitSet>> entry : candidatesMap.entrySet()) {
+            BitSet intentX = entry.getKey();
+            Set<BitSet> candidateA = entry.getValue();
+
+            for (BitSet modusA : candidateA) {
+                BitSet extentE = new BitSet();
+                boolean isFirstE = true;
+                for (int j = intentX.nextSetBit(0); j >= 0; j = intentX.nextSetBit(j + 1)) {
+                    for (int k = modusA.nextSetBit(0); k >= 0; k = modusA.nextSetBit(k + 1)) {
+                        int num = (j - 1) * newTradic.getZ() + k;
+                        BitSet temp = newTradic.getAttrsAndCondi_Attr().get(num);
+                        if (temp == null) temp = new BitSet();
+
+                        if (isFirstE) {
+                            extentE = (BitSet) temp.clone();
+                            isFirstE = false;
+                        } else {
+                            extentE.and(temp);
+                        }
+                    }
+                }
+
+                BitSet derivedIntentQ = new BitSet();
+                boolean isFirstQ = true;
+                if (!isFirstE) {
+                    for (int i = extentE.nextSetBit(0); i >= 0; i = extentE.nextSetBit(i + 1)) {
+                        for (int k = modusA.nextSetBit(0); k >= 0; k = modusA.nextSetBit(k + 1)) {
+                            int num = (i - 1) * newTradic.getZ() + k;
+                            BitSet temp = newTradic.getObjsAndCondi_Attr().get(num);
+                            if (temp == null) temp = new BitSet();
+
+                            if (isFirstQ) {
+                                derivedIntentQ = (BitSet) temp.clone();
+                                isFirstQ = false;
+                            } else {
+                                derivedIntentQ.and(temp);
+                            }
+                        }
+                    }
+                }
+
+                if (!isFirstQ && isEqual(derivedIntentQ, intentX)) {
+                    if (extentE.get(x) && intentX.get(y) && modusA.get(z)) {
+                        newConcepts.add(new TriadicConcept(extentE, intentX, modusA));
+                    }
+                }
+            }
+        }
+        return newConcepts;
+    }
+
+    /**
+     * 定理2_3
+     */
+    public static Set<TriadicConcept> generateByTheorem2_3(Tradic newTradic, Context contextK3, int x, int y, int z) {
+        Set<TriadicConcept> newConcepts = new HashSet<>();
+
+        Concept initialConcept = new Concept();
+        initialConcept.setExtent(makeSet(contextK3.getObjs_size()));
+        initialConcept.setIntent(new BitSet());
+        Map<Integer, BitSet> nj = new HashMap<>();
+        Queue<Concept> res = new LinkedList<>();
+        InClose3.inClose3_exe(contextK3, initialConcept, 1, nj, res);
+
+        int xyKey = (x - 1) * newTradic.getY() + y;
+        BitSet rightBoundary = newTradic.getObjsAndAttrs_Attr().get(xyKey);
+        if (rightBoundary == null) rightBoundary = new BitSet();
+
+        Queue<Concept> filteredRes = new LinkedList<>();
+        for (Concept c : res) {
+            BitSet X = c.getExtent();
+
+            boolean satisfiesLeft = X.get(z);
+
+            BitSet temp = (BitSet) X.clone();
+            temp.andNot(rightBoundary);
+            boolean satisfiesRight = temp.isEmpty();
+
+            if (satisfiesLeft && satisfiesRight) {
+                filteredRes.add(c);
+            }
+        }
+
+        Map<BitSet, Set<BitSet>> candidatesMap = extendCandidate1.extendCandidateExe(newTradic, filteredRes);
+
+        for (Map.Entry<BitSet, Set<BitSet>> entry : candidatesMap.entrySet()) {
+            BitSet modusX = entry.getKey();
+            Set<BitSet> candidateA = entry.getValue();
+
+            for (BitSet extentA : candidateA) {
+                BitSet intentI = new BitSet();
+                boolean isFirstI = true;
+                for (int i = extentA.nextSetBit(0); i >= 0; i = extentA.nextSetBit(i + 1)) {
+                    for (int k = modusX.nextSetBit(0); k >= 0; k = modusX.nextSetBit(k + 1)) {
+                        int num = (i - 1) * newTradic.getZ() + k;
+                        BitSet temp = newTradic.getObjsAndCondi_Attr().get(num);
+                        if (temp == null) temp = new BitSet();
+
+                        if (isFirstI) {
+                            intentI = (BitSet) temp.clone();
+                            isFirstI = false;
+                        } else {
+                            intentI.and(temp);
+                        }
+                    }
+                }
+
+                BitSet derivedModusQ = new BitSet();
+                boolean isFirstQ = true;
+                if (!isFirstI) {
+                    for (int i = extentA.nextSetBit(0); i >= 0; i = extentA.nextSetBit(i + 1)) {
+                        for (int j = intentI.nextSetBit(0); j >= 0; j = intentI.nextSetBit(j + 1)) {
+                            int num = (i - 1) * newTradic.getY() + j;
+                            BitSet temp = newTradic.getObjsAndAttrs_Attr().get(num);
+                            if (temp == null) temp = new BitSet();
+
+                            if (isFirstQ) {
+                                derivedModusQ = (BitSet) temp.clone();
+                                isFirstQ = false;
+                            } else {
+                                derivedModusQ.and(temp);
+                            }
+                        }
+                    }
+                }
+
+                if (!isFirstQ && isEqual(derivedModusQ, modusX)) {
+                    if (extentA.get(x) && intentI.get(y) && modusX.get(z)) {
+                        newConcepts.add(new TriadicConcept(extentA, intentI, modusX));
                     }
                 }
             }
